@@ -1,0 +1,246 @@
+﻿@inject IConfiguration Configuration
+@{
+    var idleTimeoutMinutes = Configuration.GetValue<int?>("Session:IdleTimeoutMinutes") ?? 20;
+    if (idleTimeoutMinutes <= 0) idleTimeoutMinutes = 20;
+
+    var warningLeadSeconds = Configuration.GetValue<int?>("Session:WarningLeadSeconds") ?? 60;
+    if (warningLeadSeconds <= 0) warningLeadSeconds = 60;
+
+    var activityKeepAliveSeconds = Configuration.GetValue<int?>("Session:ActivityKeepAliveSeconds") ?? 120;
+    if (activityKeepAliveSeconds <= 0) activityKeepAliveSeconds = 120;
+
+    var sessionExpireMs = idleTimeoutMinutes * 60 * 1000;
+    var sessionWarningMs = Math.Max(1000, sessionExpireMs - (warningLeadSeconds * 1000));
+
+    var userName = Context.Session.GetString("UserName");
+    var userDni = Context.Session.GetString("UserDNI");
+    var isLoggedIn = !string.IsNullOrWhiteSpace(userDni);
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>@ViewData["Title"] - Sistema de Gestión</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
+
+    <style>
+        body { background-color: #f4f7f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar-gob { background-color: #B91C1C; min-height: 52px; border-bottom: 4px solid #7F1D1D; }
+        .page-shell { min-height: calc(100vh - 52px); }
+        .user-pill {
+            background: rgba(255,255,255,0.96);
+            border-radius: 999px;
+            padding: .55rem 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,.08);
+        }
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: #1f2937;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+        .countdown-link {
+            border: 0;
+            background: transparent;
+            color: #0d6efd;
+            font-weight: 700;
+            padding: 0;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-gob px-3">
+            <div class="container-fluid d-flex justify-content-between align-items-center">
+                <div class="text-white fw-semibold">Sistema de Gestión</div>
+
+                @if (isLoggedIn)
+                {
+                    <div class="d-flex align-items-center gap-2 ms-auto">
+                        <button class="btn btn-light btn-sm rounded-circle shadow-sm" type="button" aria-label="Notificaciones">
+                            <i class="bi bi-bell-fill"></i>
+                        </button>
+
+                        <div class="dropdown">
+                            <button class="btn user-pill d-flex align-items-center gap-3 dropdown-toggle border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="text-end lh-sm">
+                                    <div class="small text-muted">Sesión activa</div>
+                                    <div class="fw-bold">@(!string.IsNullOrWhiteSpace(userName) ? userName : userDni)</div>
+                                </div>
+                                <div class="user-avatar">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm mt-2">
+                                <li>
+                                    <a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout">
+                                        <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                }
+            </div>
+        </nav>
+    </header>
+
+    <div class="container-fluid p-0 page-shell">
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    @if (isLoggedIn)
+    {
+        <div class="modal fade" id="sessionModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-body text-center p-4">
+                        <div class="text-warning mb-3">
+                            <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5>Su sesión está por expirar</h5>
+                        <p class="mb-3">Si no hay actividad, la sesión se cerrará en <button type="button" class="countdown-link" onclick="extendSession()"><span id="sessionCountdown">60</span> segundos</button>.</p>
+                        <button type="button" class="btn btn-warning w-100 fw-bold" onclick="extendSession()">Extender sesión</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const sessionWarningMs = @sessionWarningMs;
+            const sessionExpireMs = @sessionExpireMs;
+            const activityKeepAliveMs = @(activityKeepAliveSeconds * 1000);
+
+            const keepAliveUrl = '@Url.Action("KeepAlive", "Account")';
+            const logoutUrl = '@Url.Action("Logout", "Account")';
+
+            let warningTimer = null;
+            let expireTimer = null;
+            let countdownTimer = null;
+            let remainingSeconds = 60;
+            let sessionModal = null;
+            let keepAliveInFlight = false;
+            let lastKeepAliveAt = Date.now();
+
+            function clearSessionTimers() {
+                if (warningTimer) clearTimeout(warningTimer);
+                if (expireTimer) clearTimeout(expireTimer);
+                if (countdownTimer) clearInterval(countdownTimer);
+            }
+
+            function startSessionTimers() {
+                clearSessionTimers();
+                warningTimer = setTimeout(showSessionWarning, sessionWarningMs);
+                expireTimer = setTimeout(forceLogout, sessionExpireMs);
+            }
+
+            async function pingKeepAlive() {
+                if (keepAliveInFlight) return true;
+
+                keepAliveInFlight = true;
+                try {
+                    const response = await fetch(`${keepAliveUrl}?t=${Date.now()}`, {
+                        method: 'GET',
+                        credentials: 'same-origin',
+                        cache: 'no-store'
+                    });
+
+                    if (!response.ok) {
+                        return false;
+                    }
+
+                    lastKeepAliveAt = Date.now();
+                    return true;
+                } catch {
+                    return false;
+                } finally {
+                    keepAliveInFlight = false;
+                }
+            }
+
+            function handleUserActivity() {
+                startSessionTimers();
+
+                if (Date.now() - lastKeepAliveAt >= activityKeepAliveMs) {
+                    pingKeepAlive();
+                }
+            }
+
+            function showSessionWarning() {
+                const countdownElement = document.getElementById('sessionCountdown');
+                remainingSeconds = 60;
+                countdownElement.textContent = remainingSeconds;
+                sessionModal.show();
+
+                countdownTimer = setInterval(() => {
+                    remainingSeconds -= 1;
+                    countdownElement.textContent = Math.max(remainingSeconds, 0);
+
+                    if (remainingSeconds <= 0) {
+                        clearInterval(countdownTimer);
+                        forceLogout();
+                    }
+                }, 1000);
+            }
+
+            async function extendSession() {
+                const ok = await pingKeepAlive();
+                if (!ok) {
+                    forceLogout();
+                    return;
+                }
+
+                sessionModal.hide();
+                startSessionTimers();
+            }
+
+            function forceLogout() {
+                window.location.href = `${logoutUrl}?expired=true`;
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const modalElement = document.getElementById('sessionModal');
+                if (modalElement) {
+                    sessionModal = new bootstrap.Modal(modalElement, {
+                        backdrop: 'static',
+                        keyboard: false
+                    });
+
+                    startSessionTimers();
+                    pingKeepAlive();
+
+                    ['click', 'keydown', 'scroll', 'touchstart'].forEach(eventName => {
+                        document.addEventListener(eventName, handleUserActivity, { passive: true });
+                    });
+
+                    document.addEventListener('visibilitychange', () => {
+                        if (!document.hidden) {
+                            handleUserActivity();
+                        }
+                    });
+                }
+            });
+        </script>
+    }
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

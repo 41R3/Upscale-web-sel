@@ -1,0 +1,120 @@
+@model Upscale_web.Models.Usuario
+
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+    Layout = "_Layout";
+    var sessionExpired = Context.Request.Query["expired"] == "true" || Context.Request.Query["expired"] == "1";
+}
+
+<style>
+    .bg-login {
+        background: linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72)),
+                    url('https://upload.wikimedia.org/wikipedia/commons/e/eb/Machu_Picchu%2C_Peru.jpg');
+        background-size: cover;
+        background-position: center;
+        min-height: calc(100vh - 52px);
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 2rem 10%;
+    }
+
+    .login-card {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+        width: 100%;
+        max-width: 430px;
+    }
+
+    .btn-gob {
+        background-color: #0056b3;
+        border: none;
+        padding: 12px;
+        font-weight: 700;
+    }
+
+    .btn-gob:hover {
+        background-color: #004494;
+    }
+
+    .session-expired-toast {
+        position: fixed;
+        right: 1rem;
+        bottom: 1rem;
+        width: min(22rem, calc(100vw - 2rem));
+        z-index: 1090;
+    }
+</style>
+
+<div class="bg-login">
+    <div class="login-card">
+        <div class="text-center mb-4">
+            <h4 class="fw-bold text-secondary mb-1">SISTEMA DE GESTIÓN</h4>
+            <p class="text-muted small mb-0">Ingrese sus credenciales para continuar</p>
+        </div>
+
+        <form asp-action="Login" asp-controller="Account" method="post">
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Tipo de documento</label>
+                <select name="documentType" class="form-select" required>
+                    <option value="DNI" selected>DNI</option>
+                    <option value="CE">CE</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold">DNI</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-person"></i></span>
+                    <input type="text" name="dni" class="form-control border-start-0" placeholder="Ingresar DNI" autocomplete="off" required />
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label small fw-bold">Contraseña</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock"></i></span>
+                    <input type="password" name="password" class="form-control border-start-0" placeholder="Ingresar contraseña" autocomplete="current-password" required />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-gob w-100 mb-3">Ingresar</button>
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger py-2 small">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>
+                    <div asp-validation-summary="All" class="d-inline-block"></div>
+                </div>
+            }
+
+            <div class="mt-3 text-center">
+                <a href="mailto:soporte@minsa.gob.pe?subject=Recuperaci%C3%B3n%20de%20contrase%C3%B1a" class="text-decoration-none small text-muted d-inline-flex align-items-center gap-2 me-3">
+                    <i class="bi bi-key"></i>
+                    <span>¿Olvidaste la contraseña?</span>
+                </a>
+                <a href="mailto:soporte@minsa.gob.pe" class="text-decoration-none small text-muted d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-headset"></i>
+                    <span>¿Necesita ayuda? Contacte con el soporte</span>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (sessionExpired)
+{
+    <div class="session-expired-toast shadow-lg rounded-3 bg-primary text-white p-3">
+        <div class="d-flex align-items-start gap-3">
+            <div class="bg-white bg-opacity-25 rounded-3 p-2">
+                <i class="bi bi-info-circle-fill fs-4"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="fw-bold mb-1">Sesión expirada</div>
+                <div class="small">Su sesión expiró por inactividad. Inicie sesión nuevamente.</div>
+            </div>
+        </div>
+    </div>
+}

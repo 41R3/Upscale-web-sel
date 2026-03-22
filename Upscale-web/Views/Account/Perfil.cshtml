@@ -1,0 +1,63 @@
+@model Upscale_web.Models.Usuario?
+
+@{
+    ViewData["Title"] = "Perfil de Usuario";
+    Layout = "_Layout";
+}
+
+@if (Model == null)
+{
+    <div class="container py-5">
+        <div class="alert alert-warning shadow-sm">No se encontró información del usuario. Vuelva a iniciar sesión.</div>
+        <a asp-controller="Account" asp-action="Login" class="btn btn-primary">Ir al inicio de sesión</a>
+    </div>
+}
+else
+{
+    <div class="container py-5">
+        <div class="d-flex flex-wrap align-items-center gap-3 mb-4 border-bottom pb-4">
+            <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 84px; height: 84px; font-size: 2rem;">
+                <i class="bi bi-person-fill"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h2 class="mb-1 text-uppercase fw-bold">@(!string.IsNullOrWhiteSpace(Model.NombreCompleto) ? Model.NombreCompleto : (Model.Nombres ?? "Usuario"))</h2>
+                <div class="text-muted fw-semibold">@(!string.IsNullOrWhiteSpace(Model.Cargo) ? Model.Cargo : "Cargo no registrado")</div>
+                <div class="text-muted">@(!string.IsNullOrWhiteSpace(Model.LugarTrabajo) ? Model.LugarTrabajo : "Lugar de trabajo no registrado")</div>
+                <span class="badge @(Model.EstadoActivo ? "bg-success" : "bg-danger") mt-2">@(Model.EstadoActivo ? "ACTIVO" : "INACTIVO")</span>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white py-3 border-0">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-person-vcard me-2"></i>Información básica</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <div class="col-md-4"><label class="text-muted small d-block">Nombres</label><div class="fw-bold">@(Model.Nombres ?? "—")</div></div>
+                            <div class="col-md-4"><label class="text-muted small d-block">Primer apellido</label><div class="fw-bold">@(Model.PrimerApellido ?? Model.Apellidos ?? "—")</div></div>
+                            <div class="col-md-4"><label class="text-muted small d-block">Segundo apellido</label><div class="fw-bold">@(Model.SegundoApellido ?? "—")</div></div>
+
+                            <div class="col-md-4"><label class="text-muted small d-block">Tipo de documento</label><div class="fw-bold">@(Model.TipoDocumento ?? "DNI")</div></div>
+                            <div class="col-md-4"><label class="text-muted small d-block">Nro. documento</label><div class="fw-bold">@(Model.NumeroDocumento ?? Model.DNI ?? "—")</div></div>
+                            <div class="col-md-4"><label class="text-muted small d-block">Fecha de nacimiento</label><div class="fw-bold">@(Model.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "—")</div></div>
+
+                            <div class="col-md-4"><label class="text-muted small d-block">Nacionalidad</label><div class="fw-bold">@(Model.Nacionalidad ?? "—")</div></div>
+                            <div class="col-md-4"><label class="text-muted small d-block">Sexo</label><div class="fw-bold">@(Model.Sexo ?? "—")</div></div>
+                            <div class="col-md-4"><label class="text-muted small d-block">Correo</label><div class="fw-bold">@(Model.Email ?? "—")</div></div>
+
+                            <div class="col-md-4"><label class="text-muted small d-block">Teléfono</label><div class="fw-bold">@(Model.Telefono ?? "—")</div></div>
+                            <div class="col-md-4"><label class="text-muted small d-block">Teléfono secundario</label><div class="fw-bold">@(Model.TelefonoSecundario ?? "—")</div></div>
+                            <div class="col-md-4"><label class="text-muted small d-block">Tipo de contrato</label><div class="fw-bold">@(Model.TipoContrato ?? "—")</div></div>
+
+                            <div class="col-md-4"><label class="text-muted small d-block">Cargo</label><div class="fw-bold">@(Model.Cargo ?? "—")</div></div>
+                            <div class="col-md-4"><label class="text-muted small d-block">Lugar de trabajo</label><div class="fw-bold">@(Model.LugarTrabajo ?? "—")</div></div>
+                            <div class="col-md-4"><label class="text-muted small d-block">Fecha de contratación</label><div class="fw-bold">@(Model.FechaContratacion?.ToString("dd/MM/yyyy") ?? "—")</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

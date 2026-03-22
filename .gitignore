@@ -1,0 +1,36 @@
+# Build and dependencies
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# Rider / JetBrains
+.idea/
+.rider/
+*.sln.iml
+*.idea
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+*.userprefs
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local configuration (secrets)
+appsettings.Local.json
+appsettings.*.local.json
+
+# Environment files
+.env
+.env.local
+

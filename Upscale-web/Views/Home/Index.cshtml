@@ -1,0 +1,36 @@
+﻿@{
+    ViewData["Title"] = "Bienvenida";
+}
+
+<style>
+    .welcome-hero {
+        min-height: calc(100vh - 52px);
+        background: linear-gradient(rgba(10, 10, 10, 0.38), rgba(10, 10, 10, 0.38)),
+                    url('https://upload.wikimedia.org/wikipedia/commons/e/eb/Machu_Picchu%2C_Peru.jpg');
+        background-size: cover;
+        background-position: center;
+        display: flex;
+        align-items: center;
+    }
+
+    .welcome-card {
+        max-width: 760px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 1.25rem;
+        box-shadow: 0 20px 50px rgba(0,0,0,.18);
+    }
+</style>
+
+<section class="welcome-hero px-3 px-md-5">
+    <div class="container">
+        <div class="welcome-card p-4 p-md-5">
+            <div class="badge bg-success mb-3 px-3 py-2">Cuenta activada</div>
+            <h1 class="display-5 fw-bold text-dark">Bienvenido al Sistema de Gestión</h1>
+            <p class="lead text-muted mb-4">Tu cuenta en el aplicativo ya está activada. Presiona el botón para ir a la pantalla de inicio de sesión.</p>
+
+            <div class="d-flex gap-3 flex-wrap">
+                <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg px-4">Iniciar sesión</a>
+            </div>
+        </div>
+    </div>
+</section>

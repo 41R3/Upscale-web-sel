@@ -1,0 +1,18 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Upscale-web", "Upscale-web\Upscale-web.csproj", "{982668CB-505C-4EEA-BD00-D66AE7683B25}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{0AA4157C-A33D-420A-B894-82CB1B3E278B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{982668CB-505C-4EEA-BD00-D66AE7683B25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{982668CB-505C-4EEA-BD00-D66AE7683B25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{982668CB-505C-4EEA-BD00-D66AE7683B25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{982668CB-505C-4EEA-BD00-D66AE7683B25}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

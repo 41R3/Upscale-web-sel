@@ -1,0 +1,127 @@
+@model string?
+
+@{
+    ViewData["Title"] = "Cuenta bloqueada";
+    Layout = "_Layout";
+    var loginUrl = Url.Action("Login", "Account") ?? "/Account/Login";
+    var serverNowUtc = ViewData["ServerNowUtc"]?.ToString() ?? string.Empty;
+}
+
+<style>
+    .blocked-hero {
+        min-height: calc(100vh - 52px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(rgba(8, 47, 73, 0.55), rgba(8, 47, 73, 0.55)),
+                    url('https://upload.wikimedia.org/wikipedia/commons/e/eb/Machu_Picchu%2C_Peru.jpg');
+        background-size: cover;
+        background-position: center;
+        padding: 2rem 1rem;
+    }
+
+    .blocked-card {
+        max-width: 720px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 1.25rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, .2);
+    }
+
+    .blocked-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: rgba(13, 110, 253, .12);
+        color: #0d6efd;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
+<section class="blocked-hero">
+    <div class="blocked-card p-4 p-md-5">
+        <div class="d-flex align-items-start gap-3 mb-4">
+            <div class="blocked-icon flex-shrink-0">
+                <i class="bi bi-shield-lock-fill fs-2"></i>
+            </div>
+            <div>
+                <h1 class="h3 fw-bold mb-2">Cuenta bloqueada temporalmente</h1>
+                <p class="text-muted mb-0">
+                    Se ha excedido el número de intentos permitidos. Por seguridad, la cuenta ha sido bloqueada por 15 minutos.
+                    Inténtelo más tarde.
+                </p>
+            </div>
+        </div>
+
+        <div class="alert alert-primary border-0 shadow-sm mb-4">
+            <div class="fw-bold mb-1">Podrá volver a iniciar sesión en:</div>
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-hourglass-split"></i>
+                <span id="countdownText" class="fw-bold">calculando...</span>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-3 align-items-center">
+            <a id="loginButton" href="@loginUrl" class="btn btn-primary px-4" aria-disabled="true" tabindex="-1">Ir al inicio de sesión</a>
+            <span class="text-muted small">Cuando el bloqueo expire, será redirigido automáticamente.</span>
+        </div>
+    </div>
+</section>
+
+<script>
+    (function () {
+        const loginUrl = '@loginUrl';
+        const rawUnlockAt = '@(Model ?? string.Empty)';
+        const rawServerNowUtc = '@serverNowUtc';
+        const countdownText = document.getElementById('countdownText');
+        const loginButton = document.getElementById('loginButton');
+
+        const fallbackUnlockAt = new Date(Date.now() + 15 * 60 * 1000);
+        const parsedUnlockAt = rawUnlockAt ? new Date(rawUnlockAt) : fallbackUnlockAt;
+        const unlockAt = isNaN(parsedUnlockAt.getTime()) ? fallbackUnlockAt : parsedUnlockAt;
+        const parsedServerNow = rawServerNowUtc ? new Date(rawServerNowUtc) : null;
+        const serverClientOffsetMs = parsedServerNow && !isNaN(parsedServerNow.getTime())
+            ? parsedServerNow.getTime() - Date.now()
+            : 0;
+
+        let redirected = false;
+
+        function formatRemaining(ms) {
+            const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutesPart = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            if (hours > 0) {
+                return `${hours}:${String(minutesPart).padStart(2, '0')}:${String(seconds).padStart(2, '0')} h`;
+            }
+
+            const minutes = Math.floor(totalSeconds / 60);
+            return `${minutes}:${String(seconds).padStart(2, '0')} min`;
+        }
+
+        function tick() {
+            const remainingMs = unlockAt.getTime() - (Date.now() + serverClientOffsetMs);
+            if (remainingMs <= 0) {
+                countdownText.textContent = '0:00 min';
+                loginButton.classList.remove('disabled');
+                loginButton.removeAttribute('aria-disabled');
+                loginButton.removeAttribute('tabindex');
+
+                if (!redirected) {
+                    redirected = true;
+                    window.location.href = loginUrl;
+                }
+                return;
+            }
+
+            countdownText.textContent = formatRemaining(remainingMs);
+        }
+
+        tick();
+        setInterval(tick, 1000);
+    })();
+</script>
+
